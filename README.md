@@ -1,1 +1,3 @@
-# loess
+# loess (https://www.statisticshowto.com/lowess-smoothing/#:~:text=Statistics%20Definitions%20%3E%20Lowess%20Smoothing%20Lowess%20Smoothing%3A%20Overview,to%20see%20relationship%20between%20variables%20and%20foresee%20trends)
+
+LOWESS, and least squares fitting in general, are non-parametric strategies for fitting a smooth curve to data points. “Parametric” means that the researcher or analyst assumes in advance that the data fits some type of distribution (i.e. the normal distribution). Because some type of distribution is assumed in advance, parametric fitting can lead to fitting a smooth curve that misrepresents the data. In those cases, non-parametric smoothers may be a better choice. Non-parametric smoothers like LOESS try to find a curve of best fit without assuming the data must fit some distribution shape. In general, both types of smoothers are used for the same set of data to offset the advantages and disadvantages of each type of smoother.
