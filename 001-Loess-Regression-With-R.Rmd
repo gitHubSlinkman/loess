@@ -1,0 +1,140 @@
+---
+title: "Loess-Regression-With-R"
+author: "by  Selva Prabhakarand implemetation by Craig 
+Slinkman"
+date: "1/1/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Preface
+
+I find that I learn new things in R by implementing them myself.  Essentially, this is what the theoretical physicist Richard Feynman said he did when he read a theoretical physics paper. He would do their derivations so that he would understand the contents of the paper.
+
+I do something similar when I am learning a new area of applied statistics or fine tuning what I know.  As I am an applied statistician my tool of choice in the R statistical analysis environment and within that environment I use Hadley Wickham's tidyverse.
+
+This article is primary the work of [Selva Prabhakarand](http://r-statistics.co/Loess-Regression-With-R.html) with the implementation of his work implemented ion the tidyverse by me (Craig Slinkman).  I have made some minor changes to his English usually with the intent of making more understandable to North Americans.  His blog start below.
+
+# r-statistics.co: by Selva Prabhakaran
+
+Loess Regression is the most common method used to smooth a volatile time series. It is a non-parametric methods where least squares regression is performed in localized subsets, which makes it a suitable candidate for smoothing any numerical vector.  
+
+## INTRODUCTION
+
+Loess short for Local Regression is a non-parametric approach that fits multiple regressions in local neighborhood. This can be particularly resourceful, if you know that your $X$ variables are bound within a range.
+
+Loess regression can be applied using the R-function **loess()** on a numerical vector to smooth it and to predict the $Y$ locally (i.e, within the trained values of $X$'s). The size of the neighborhood can be controlled using the span argument, which ranges between 0 to 1. It controls the degree of smoothing. So, the greater the value of span, more smooth is the fitted curve.
+
+The predictor variable can just be and index that use  from 1 to number of observations in the absence of explanatory variables. If other explanatory variables are available, they can be used as well (maximum of 4).
+
+## EXAMPLE 
+
+For this example we will try to locally regress and smooth the median duration of unemployment based on the economics dataset from ggplot2 package. We consider only the first 80 rows for this analysis, so it is easier to observe the degree of smoothing in the graphs below.
+
+```
+install.packages( "tidyverse")
+```
+
+Because I have the installed I do not need to do this.
+
+```{r obtaining_and_wrangling the data}
+################################################################################
+# Since we will be using the tidyverse we will need to load the tidyverse 
+# package.  If you don't have the tidyverse package you will need to install as
+# follows:
+################################################################################
+
+library( tidyverse )                      # Load the tidyverse package ...
+
+economics <-                              # Change the data.frame to a tidyverse
+  as_tibble( economics )                  # tibble.
+
+economics                                 # Display tibble to verify data.
+
+economics <-                              # Keep only the first 80 observed
+   head( economics, 80 )                    # values.
+
+economics                                 # Re-display tibble
+
+```
+
+### Analysis of script by statements.
+
+#### Line 1
+
+The line
+
+```
+library(tidyverse )
+```
+
+loads the locally install package tidyverse.  The [tidyverse](https://rviews.rstudio.com/2017/06/08/what-is-the-tidyverse/)
+
+> The tidyverse is a coherent system of packages for data manipulation, exploration and visualization that share a common design philosophy. These were mostly developed by Hadley Wickham himself, but they are now being expanded by several contributors. Tidyverse packages are intended to make statisticians and data scientists more productive by guiding them through workflows that facilitate communication, and result in reproducible work products. Fundamentally, the tidyverse is about the connections between the tools that make the workflow possible.  
+
+The tidyverse is designed to allow the statistician to carry out the entire lifecycle of 
+data analysis project. [1]((https://rviews.rstudio.com/2017/06/08/what-is-the-tidyverse/)) show the typical lifecycle of a statistical analysis project along with the names of the R-packages useful foe data analysis.  
+
+![Figure 1][1]
+
+#### Line 2
+
+```
+economics <-                              # Change the data.frame to a tidyverse
+  as_tibble( economics )                  # tibble.
+```
+
+The contents of the $economics$ is a sample dataset that comes with the $ggplot2$ package.  When we loaded the $tidyverse$ package the plotting page ggplot2 was automatically loaded as the package $ggplot2$ is a member of the tidyverse.  In the orginal article by   Prabhakarand he used the following statement:
+
+```
+data( economics, package="ggplot2) # load data
+```
+We don't need to do that because when the $ggplot2$ package is loaded the reference to the data sets were made available to R.  
+
+Now the data object economics is an R-dataframe.  The [Magoosh Data Science Blog](https://magoosh.com/data-science/what-is-an-r-data-frame/#:~:text=R%20Data%20Frame%20A%20%E2%80%9Cdata%20frame%E2%80%9D%20is%20basically,same%20length%20%28equal%20number%20of%20rows%20in%20matrices%29.) defines a dataframe:
+
+>A “data frame” is basically a quasi-builtin type of data in R. It’s not a primitive; that is, the language definition mentions “Data frame objects” but only in passing.
+“Data frame is a list of factors, vectors, and matrices with all of these having the same length (equal number of rows in matrices). Additionally, a data frame also has names attributes for labelling of variables and also row name attributes for the labelling of cases."
+
+A dataframe is essentially a flat file used to manipulate and analyze data.  It has been modernized in the $tidyverse$ into a $tibble$. [Tibbles](https://tibble.tidyverse.org/) are
+
+>A tibble, or tbl_df, is a modern reimagining of the data.frame, keeping what time has proven to be effective, and throwing out what is not. Tibbles are data.frames that are lazy and surly: they do less (i.e. they don’t change variable names or types, and don’t do partial matching) and complain more (e.g. when a variable does not exist). This forces you to confront problems earlier, typically leading to cleaner, more expressive code. Tibbles also have an enhanced print() method which makes them easier to use with large datasets containing complex objects.
+
+Personally, I prefer to work with tibbles.  The statement:
+
+```
+economics <-                              # Change the data.frame to a tidyverse
+  as_tibble( economics ) 
+```
+
+changes the dataframe $economics$ to a tibble.  For those that have study object-oriented the tibble is a dataframe with less functionality that a dataframe although has less functionality.  For example:
+
+>$tibble()$ does much less than data.frame(): it never changes the type of the inputs (e.g. it never converts strings to factors!), it never changes the names of variables, it only recycles inputs of length 1, and it never creates row.names(). You can read more about these features in the vignette, [vignette("tibble", package = "tibble")](https://tibble.tidyverse.org/articles/tibble.html).
+
+So what our statement does it takes the dataframe $economics$ and changes the R-class to a $tibble$.  When you print it is only gives you the first 10 rows of the tibble but dies give you the number of rows and columns of the tibble .  We show in the next line of the script.
+
+#### Next line:
+
+```
+economics                                 # Display tibble to verify data.
+```
+
+Note that generated output we are told the number of rows in the tibble and the number of the collumns and the number of values that will fit on the output pafe,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1]: figures/001-figure-01.png "Figure 1: Data analysis life cycle"
